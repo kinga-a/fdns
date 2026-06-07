@@ -1,7 +1,6 @@
-// edge-functions/api/auth/verify.js
 export async function onRequestPost(context) {
     const { request, env } = context;
-    
+
     try {
         const { password } = await request.json();
         const accessPassword = env.ACCESS_PASSWORD;
@@ -18,7 +17,7 @@ export async function onRequestPost(context) {
             const timestamp = Date.now();
             const random = Math.random().toString(36).substring(2, 15);
             const token = `dns_${timestamp}_${random}`;
-            
+
             // 存储到KV
             if (env.dns_kv) {
                 try {
@@ -27,7 +26,7 @@ export async function onRequestPost(context) {
                     console.log('KV store failed:', e);
                 }
             }
-            
+
             return new Response(JSON.stringify({ 
                 success: true, 
                 token,
