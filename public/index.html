@@ -135,21 +135,13 @@
             background-color: rgba(16, 185, 129, 0.2);
             color: #34d399;
         }
-        /* 模态框滚动修复 */
-        .modal-scroll {
-            max-height: 85vh;
-            overflow-y: auto;
-            overflow-x: hidden;
+        /* 模态框样式 - 使用原生滚动，避免复杂布局 */
+        #recordModal {
+            -webkit-overflow-scrolling: touch;
         }
-        .modal-scroll::-webkit-scrollbar {
-            width: 6px;
-        }
-        .modal-scroll::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        .modal-scroll::-webkit-scrollbar-thumb {
-            background: var(--bg-secondary);
-            border-radius: 3px;
+        #recordModal .card {
+            will-change: transform;
+            transform: translateZ(0);
         }
     </style>
 <base target="_blank">
@@ -184,18 +176,20 @@
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <section id="configSection" class="card rounded-xl p-6 mb-6 fade-in">
-            <div class="flex justify-between items-center mb-4">
+            <div class="flex justify-between items-center mb-4 cursor-pointer" onclick="toggleConfig()">
                 <h2 class="text-lg font-semibold flex items-center">
                     <i class="fas fa-key mr-2 text-yellow-500"></i>
                     API 配置
+                    <i id="configToggleIcon" class="fas fa-chevron-down ml-2 text-gray-400 text-sm transition-transform duration-200"></i>
                 </h2>
-                <div class="flex items-center space-x-2">
+                <div class="flex items-center space-x-2" onclick="event.stopPropagation()">
                     <span id="envApiKeyBadge" class="env-badge hidden"><i class="fas fa-shield-alt mr-1"></i>服务端已配置</span>
                     <button onclick="saveConfig()" class="btn-primary px-4 py-2 rounded-lg text-sm font-medium transition">
                         <i class="fas fa-save mr-2"></i>保存配置
                     </button>
                 </div>
             </div>
+            <div id="configContent" class="transition-all duration-300 overflow-hidden">
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -231,6 +225,7 @@
                     </div>
                 </div>
             </div>
+        </div>
         </section>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -306,38 +301,38 @@
         </div>
     </main>
 
-    <!-- 修复后的模态框 - 添加滚动支持 -->
-    <div id="recordModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
-        <div class="modal-overlay absolute inset-0 bg-black/60" onclick="closeModal()"></div>
-        <div class="relative min-h-screen flex items-start justify-center p-4 pt-10 pb-10">
-            <div class="card rounded-xl shadow-2xl w-full max-w-md p-6 relative fade-in modal-scroll my-8">
-                <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white z-10">
-                    <i class="fas fa-times"></i>
+    <!-- 修复后的模态框 - 轻量滚动方案 -->
+    <div id="recordModal" class="fixed inset-0 z-50 hidden" style="overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;">
+        <div class="modal-overlay fixed inset-0 bg-black/60" onclick="closeModal()" style="position: fixed;"></div>
+        <div class="relative min-h-[100dvh] flex items-start justify-center p-4 pt-8 pb-20">
+            <div class="card rounded-xl shadow-2xl w-full max-w-md p-5 relative fade-in my-4" style="max-height: none; contain: layout style;">
+                <button onclick="closeModal()" class="absolute top-3 right-3 text-gray-400 hover:text-white z-10 p-1">
+                    <i class="fas fa-times text-lg"></i>
                 </button>
 
-                <h3 id="modalTitle" class="text-xl font-bold mb-6">添加解析记录</h3>
+                <h3 id="modalTitle" class="text-lg font-bold mb-4 pr-8">添加解析记录</h3>
 
                 <form id="recordForm" onsubmit="handleRecordSubmit(event)">
                     <input type="hidden" id="recordId">
 
-                    <div class="space-y-4">
+                    <div class="space-y-3">
                         <div>
-                            <label class="block text-sm font-medium mb-2 text-gray-400">域名</label>
-                            <input type="text" id="formDomain" class="input-field w-full px-4 py-2 rounded-lg bg-gray-800" readonly>
+                            <label class="block text-xs font-medium mb-1 text-gray-400">域名</label>
+                            <input type="text" id="formDomain" class="input-field w-full px-3 py-1.5 rounded-lg bg-gray-800 text-sm" readonly>
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium mb-2 text-gray-400">主机记录 <span class="text-red-500">*</span></label>
+                            <label class="block text-xs font-medium mb-1 text-gray-400">主机记录 <span class="text-red-500">*</span></label>
                             <div class="flex items-center">
-                                <input type="text" id="formHost" class="input-field w-full px-4 py-2 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="www" required>
-                                <span class="px-3 py-2 bg-gray-700 text-gray-400 rounded-r-lg border border-l-0 border-gray-600">.<span id="formDomainSuffix">example.com</span></span>
+                                <input type="text" id="formHost" class="input-field w-full px-3 py-1.5 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" placeholder="www" required>
+                                <span class="px-2 py-1.5 bg-gray-700 text-gray-400 rounded-r-lg border border-l-0 border-gray-600 text-sm">.<span id="formDomainSuffix">example.com</span></span>
                             </div>
-                            <p class="text-xs text-gray-500 mt-1">使用 @ 表示根域名</p>
+                            <p class="text-xs text-gray-500 mt-0.5">使用 @ 表示根域名</p>
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium mb-2 text-gray-400">记录类型 <span class="text-red-500">*</span></label>
-                            <select id="formType" class="input-field w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                            <label class="block text-xs font-medium mb-1 text-gray-400">记录类型 <span class="text-red-500">*</span></label>
+                            <select id="formType" class="input-field w-full px-3 py-1.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" required>
                                 <option value="A">A - IPv4 地址</option>
                                 <option value="AAAA">AAAA - IPv6 地址</option>
                                 <option value="CNAME">CNAME - 别名记录</option>
@@ -348,25 +343,26 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium mb-2 text-gray-400">记录值 <span class="text-red-500">*</span></label>
-                            <input type="text" id="formValue" class="input-field w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="1.2.3.4" required>
+                            <label class="block text-xs font-medium mb-1 text-gray-400">记录值 <span class="text-red-500">*</span></label>
+                            <input type="text" id="formValue" class="input-field w-full px-3 py-1.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" placeholder="1.2.3.4" required>
                         </div>
 
-                        <div>
-                            <label class="block text-sm font-medium mb-2 text-gray-400">TTL (秒)</label>
-                            <input type="number" id="formTTL" class="input-field w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" value="600" min="60" step="1">
-                            <p class="text-xs text-gray-500 mt-1">默认 600 秒</p>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium mb-2 text-gray-400">优先级 (MX 记录)</label>
-                            <input type="number" id="formPriority" class="input-field w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="10" min="0" max="65535">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium mb-1 text-gray-400">TTL (秒)</label>
+                                <input type="number" id="formTTL" class="input-field w-full px-3 py-1.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" value="600" min="60" step="1">
+                                <p class="text-xs text-gray-500 mt-0.5">默认 600</p>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium mb-1 text-gray-400">优先级 (MX)</label>
+                                <input type="number" id="formPriority" class="input-field w-full px-3 py-1.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" placeholder="10" min="0" max="65535">
+                            </div>
                         </div>
                     </div>
 
-                    <div class="mt-6 flex space-x-3">
-                        <button type="button" onclick="closeModal()" class="flex-1 px-4 py-2 rounded-lg border border-gray-600 hover:bg-gray-700 transition">取消</button>
-                        <button type="submit" id="submitBtn" class="flex-1 btn-primary px-4 py-2 rounded-lg font-medium transition">
+                    <div class="mt-4 flex space-x-2">
+                        <button type="button" onclick="closeModal()" class="flex-1 px-3 py-2 rounded-lg border border-gray-600 hover:bg-gray-700 transition text-sm">取消</button>
+                        <button type="submit" id="submitBtn" class="flex-1 btn-primary px-3 py-2 rounded-lg font-medium transition text-sm">
                             <span id="submitText">确认添加</span>
                         </button>
                     </div>
@@ -404,6 +400,14 @@
             loadConfig();
             checkTheme();
             checkServerConfig();
+            // 初始化API配置折叠状态，默认关闭
+            const section = document.getElementById('configSection');
+            const configCollapsed = localStorage.getItem('configCollapsed');
+            if (configCollapsed === 'false') {
+                section.classList.add('config-expanded');
+            } else {
+                section.classList.add('config-collapsed');
+            }
         });
 
         async function checkServerConfig() {
@@ -421,6 +425,20 @@
                 }
             } catch (e) {
                 console.log('Server config check failed:', e);
+            }
+        }
+
+        function toggleConfig() {
+            const section = document.getElementById('configSection');
+            const isCollapsed = section.classList.contains('config-collapsed');
+            if (isCollapsed) {
+                section.classList.remove('config-collapsed');
+                section.classList.add('config-expanded');
+                localStorage.setItem('configCollapsed', 'false');
+            } else {
+                section.classList.add('config-collapsed');
+                section.classList.remove('config-expanded');
+                localStorage.setItem('configCollapsed', 'true');
             }
         }
 
@@ -639,10 +657,8 @@
             document.getElementById('recordModal').classList.remove('hidden');
             document.body.style.overflow = 'hidden';
             // 确保模态框滚动到顶部
-            setTimeout(() => {
-                const modalScroll = document.querySelector('.modal-scroll');
-                if (modalScroll) modalScroll.scrollTop = 0;
-            }, 10);
+            const modal = document.getElementById('recordModal');
+            modal.scrollTop = 0;
         }
 
         function editRecord(id) {
@@ -662,18 +678,15 @@
             document.getElementById('recordModal').classList.remove('hidden');
             document.body.style.overflow = 'hidden';
             // 确保模态框滚动到顶部
-            setTimeout(() => {
-                const modalScroll = document.querySelector('.modal-scroll');
-                if (modalScroll) modalScroll.scrollTop = 0;
-            }, 10);
+            const modal = document.getElementById('recordModal');
+            modal.scrollTop = 0;
         }
 
         function closeModal() { 
             document.getElementById('recordModal').classList.add('hidden'); 
             document.body.style.overflow = '';
             // 重置模态框滚动位置
-            const modalScroll = document.querySelector('.modal-scroll');
-            if (modalScroll) modalScroll.scrollTop = 0;
+            document.getElementById('recordModal').scrollTop = 0;
         }
 
         async function handleRecordSubmit(e) {
