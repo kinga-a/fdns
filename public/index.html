@@ -137,7 +137,7 @@
         }
         /* 模态框滚动修复 */
         .modal-scroll {
-            max-height: 90vh;
+            max-height: 85vh;
             overflow-y: auto;
             overflow-x: hidden;
             display: flex;
@@ -153,32 +153,30 @@
             background: var(--bg-secondary);
             border-radius: 3px;
         }
-        .modal-form-content {
+        .modal-body {
             flex: 1;
             overflow-y: auto;
             overflow-x: hidden;
             padding-right: 4px;
-            max-height: calc(90vh - 140px);
+            max-height: calc(85vh - 120px);
         }
-        .modal-form-content::-webkit-scrollbar {
+        .modal-body::-webkit-scrollbar {
             width: 6px;
         }
-        .modal-form-content::-webkit-scrollbar-track {
+        .modal-body::-webkit-scrollbar-track {
             background: transparent;
         }
-        .modal-form-content::-webkit-scrollbar-thumb {
+        .modal-body::-webkit-scrollbar-thumb {
             background: var(--bg-secondary);
             border-radius: 3px;
         }
-        .modal-footer {
-            position: sticky;
-            bottom: 0;
-            background: inherit;
+        .modal-actions {
             padding-top: 16px;
             border-top: 1px solid rgba(255,255,255,0.1);
             margin-top: 8px;
+            flex-shrink: 0;
         }
-        .light-mode .modal-footer {
+        .light-mode .modal-actions {
             border-top: 1px solid #e2e8f0;
         }
     </style>
@@ -335,10 +333,10 @@
     </main>
 
     <!-- 修复后的模态框 - 添加滚动支持 -->
-    <div id="recordModal" class="fixed inset-0 z-50 hidden">
+    <div id="recordModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
         <div class="modal-overlay absolute inset-0 bg-black/60" onclick="closeModal()"></div>
-        <div class="relative min-h-screen flex items-start justify-center p-4 pt-10">
-            <div class="card rounded-xl shadow-2xl w-full max-w-md p-6 relative fade-in modal-scroll">
+        <div class="relative min-h-screen flex items-start justify-center p-4 pt-10 pb-10">
+            <div class="card rounded-xl shadow-2xl w-full max-w-md p-6 relative fade-in modal-scroll my-8">
                 <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white z-10">
                     <i class="fas fa-times"></i>
                 </button>
@@ -348,7 +346,7 @@
                 <form id="recordForm" onsubmit="handleRecordSubmit(event)">
                     <input type="hidden" id="recordId">
 
-                    <div class="modal-form-content">
+                    <div class="modal-body">
                         <div class="space-y-4">
                             <div>
                                 <label class="block text-sm font-medium mb-2 text-gray-400">域名</label>
@@ -394,7 +392,7 @@
                         </div>
                     </div>
 
-                    <div class="modal-footer flex space-x-3">
+                    <div class="modal-actions flex space-x-3">
                         <button type="button" onclick="closeModal()" class="flex-1 px-4 py-2 rounded-lg border border-gray-600 hover:bg-gray-700 transition">取消</button>
                         <button type="submit" id="submitBtn" class="flex-1 btn-primary px-4 py-2 rounded-lg font-medium transition">
                             <span id="submitText">确认添加</span>
@@ -662,10 +660,9 @@
             document.getElementById('formTTL').value = '600';
             document.getElementById('recordModal').classList.remove('hidden');
             document.body.style.overflow = 'hidden';
-            // 确保内容区域滚动到顶部
             setTimeout(() => {
-                const modalContent = document.querySelector('.modal-form-content');
-                if (modalContent) modalContent.scrollTop = 0;
+                const modalBody = document.querySelector('.modal-body');
+                if (modalBody) modalBody.scrollTop = 0;
             }, 10);
         }
 
@@ -685,19 +682,17 @@
             document.getElementById('formPriority').value = record.priority || record.mx_priority || record.Priority || '';
             document.getElementById('recordModal').classList.remove('hidden');
             document.body.style.overflow = 'hidden';
-            // 确保内容区域滚动到顶部
             setTimeout(() => {
-                const modalContent = document.querySelector('.modal-form-content');
-                if (modalContent) modalContent.scrollTop = 0;
+                const modalBody = document.querySelector('.modal-body');
+                if (modalBody) modalBody.scrollTop = 0;
             }, 10);
         }
 
         function closeModal() { 
             document.getElementById('recordModal').classList.add('hidden'); 
             document.body.style.overflow = '';
-            // 重置表单滚动位置
-            const modalContent = document.querySelector('.modal-form-content');
-            if (modalContent) modalContent.scrollTop = 0;
+            const modalBody = document.querySelector('.modal-body');
+            if (modalBody) modalBody.scrollTop = 0;
         }
 
         async function handleRecordSubmit(e) {
