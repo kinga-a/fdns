@@ -1,41 +1,40 @@
-// edge-functions/index.js
 export async function onRequest(context) {
     const { request, env } = context;
     const url = new URL(request.url);
-    
+
     // 检查是否需要密码验证
     const accessPassword = env.ACCESS_PASSWORD;
-    
+
     if (!accessPassword || accessPassword.trim() === '') {
-        // 没有设置密码，放行到静态资源
-        return new Response(null, { status: 404 });
+        // 没有设置密码，重定向到 index.html
+        return Response.redirect(url.origin + '/index.html', 302);
     }
-    
+
     // 从 Cookie 获取会话
     const cookie = request.headers.get('cookie') || '';
     const sessionMatch = cookie.match(/dns_session=([^;]+)/);
     const sessionToken = sessionMatch ? decodeURIComponent(sessionMatch[1]) : null;
-    
+
     // 验证会话
     let validSession = false;
-    
+
     if (sessionToken && env.dns_kv) {
         try {
             const session = await env.dns_kv.get(`session:${sessionToken}`);
             if (session === 'valid') validSession = true;
         } catch (e) {}
     }
-    
+
     // 降级：检查Cookie格式
     if (!validSession && sessionToken && sessionToken.startsWith('dns_')) {
         validSession = true;
     }
-    
+
     if (validSession) {
-        // 已验证，返回404让平台继续处理静态资源
-        return new Response(null, { status: 404 });
+        // 已验证，重定向到 index.html
+        return Response.redirect(url.origin + '/index.html', 302);
     }
-    
+
     // 未验证，返回密码页面
     return new Response(passwordHTML, {
         status: 401,
@@ -136,14 +135,14 @@ const passwordHTML = `<!DOCTYPE html>
             e.preventDefault();
             const password = document.getElementById('password').value;
             if (!password) return;
-            
+
             try {
                 const response = await fetch('/api/auth/verify', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ password })
                 });
-                
+
                 if (response.ok) {
                     const data = await response.json();
                     document.cookie = 'dns_session=' + encodeURIComponent(data.token) + '; path=/; max-age=86400; SameSite=Lax';
