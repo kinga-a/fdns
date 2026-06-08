@@ -196,7 +196,6 @@
             text-align: center;
         }
     </style>
-<base target="_blank">
 </head>
 <body class="min-h-screen">
     <div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
@@ -222,64 +221,6 @@
         </div>
     </div>
 
-    <!-- API配置弹窗 -->
-    <div id="apiConfigModal" class="fixed inset-0 z-50 hidden">
-        <div class="modal-overlay absolute inset-0 bg-black/60" onclick="closeApiConfigModal()"></div>
-        <div class="relative min-h-screen flex items-center justify-center p-4">
-            <div class="card rounded-xl shadow-2xl w-full max-w-md p-6 relative fade-in">
-                <button onclick="closeApiConfigModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white z-10">
-                    <i class="fas fa-times"></i>
-                </button>
-                <div class="flex items-center space-x-3 mb-6">
-                    <div class="w-10 h-10 bg-yellow-600/20 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-key text-yellow-500 text-lg"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-xl font-bold">API 配置</h3>
-                        <p class="text-xs text-gray-400">配置 DNS OpenAPI 访问凭证</p>
-                    </div>
-                </div>
-
-                <div class="space-y-4">
-                    <div>
-                        <div class="flex items-center justify-between mb-2">
-                            <label class="block text-sm font-medium text-gray-400">API Key</label>
-                            <span id="envApiKeyBadge" class="env-badge hidden"><i class="fas fa-shield-alt mr-1"></i>服务端已配置</span>
-                        </div>
-                        <div class="relative">
-                            <input type="password" id="apiKey" class="input-field w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="输入你的 API Key">
-                            <button onclick="toggleApiKeyVisibility()" class="absolute right-3 top-2.5 text-gray-400 hover:text-white">
-                                <i id="apiKeyIcon" class="fas fa-eye"></i>
-                            </button>
-                        </div>
-                        <p class="text-xs text-gray-500 mt-1">如果服务端已配置环境变量，此处留空即可</p>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2 text-gray-400">API 基础地址</label>
-                        <input type="text" id="baseUrl" class="input-field w-full px-4 py-2 rounded-lg bg-gray-800" value="/api/client/dnsopenapi" readonly>
-                        <p class="text-xs text-gray-500 mt-1">通过 Edge Function 代理，自动处理 CORS</p>
-                    </div>
-                </div>
-
-                <div class="mt-6 p-3 bg-blue-900/30 border border-blue-700/50 rounded-lg">
-                    <div class="flex items-start space-x-2">
-                        <i class="fas fa-info-circle text-blue-500 mt-0.5"></i>
-                        <div class="text-sm text-blue-200">
-                            <p class="text-xs"><strong>部署说明：</strong> 支持在 EdgeOne Pages 环境变量中配置 <code>DNS_API_KEY</code> 和 <code>ACCESS_PASSWORD</code>。如果环境变量未配置 API Key，则需要在页面输入。</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="mt-6 flex space-x-3">
-                    <button onclick="closeApiConfigModal()" class="flex-1 px-4 py-2 rounded-lg border border-gray-600 hover:bg-gray-700 transition">取消</button>
-                    <button onclick="saveConfig()" class="flex-1 btn-primary px-4 py-2 rounded-lg font-medium transition">
-                        <i class="fas fa-save mr-2"></i>保存配置
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <header class="card sticky top-0 z-40 border-b">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
             <div class="flex items-center space-x-3">
@@ -295,10 +236,6 @@
                 <button onclick="toggleTheme()" class="p-2 rounded-lg hover:bg-gray-700 transition">
                     <i id="themeIcon" class="fas fa-sun"></i>
                 </button>
-                <button onclick="showApiConfigModal()" class="flex items-center space-x-2 px-3 py-2 rounded-lg transition text-sm font-medium bg-purple-600/20 text-purple-400 hover:bg-purple-600/30" title="API配置">
-                    <i class="fas fa-key"></i>
-                    <span class="hidden sm:inline">API配置</span>
-                </button>
                 <!-- 登录/退出按钮 -->
                 <button id="authBtn" onclick="toggleAuth()" class="flex items-center space-x-2 px-3 py-2 rounded-lg transition text-sm font-medium">
                     <i id="authIcon" class="fas fa-lock"></i>
@@ -313,6 +250,64 @@
     </header>
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <section id="configSection" class="card rounded-xl p-6 mb-6 fade-in">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-semibold flex items-center">
+                    <i class="fas fa-key mr-2 text-yellow-500"></i>
+                    API 配置
+                </h2>
+                <div class="flex items-center space-x-2">
+                    <span id="envApiKeyBadge" class="env-badge hidden"><i class="fas fa-shield-alt mr-1"></i>服务端已配置</span>
+                    <button onclick="toggleConfig()" id="configToggleBtn" class="p-2 rounded-lg hover:bg-gray-700 transition text-gray-400" title="展开/收起配置">
+                        <i id="configToggleIcon" class="fas fa-chevron-down"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div id="configContent" class="hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2 text-gray-400">
+                            API Key 
+                            <span id="apiKeySource" class="text-xs text-gray-500 ml-1">(前端配置)</span>
+                        </label>
+                        <div class="relative">
+                            <input type="password" id="apiKey" class="input-field w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="输入你的 API Key">
+                            <button onclick="toggleApiKeyVisibility()" class="absolute right-3 top-2.5 text-gray-400 hover:text-white">
+                                <i id="apiKeyIcon" class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">如果服务端已配置环境变量，此处留空即可</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2 text-gray-400">API 基础地址</label>
+                        <input type="text" id="baseUrl" class="input-field w-full px-4 py-2 rounded-lg bg-gray-800" value="/api/client/dnsopenapi" readonly>
+                        <p class="text-xs text-gray-500 mt-1">通过 Edge Function 代理，自动处理 CORS</p>
+                    </div>
+                </div>
+
+                <div class="mt-4 flex justify-end">
+                    <button onclick="saveConfig()" class="btn-primary px-4 py-2 rounded-lg text-sm font-medium transition">
+                        <i class="fas fa-save mr-2"></i>保存配置
+                    </button>
+                </div>
+
+                <div class="mt-4 p-3 bg-blue-900/30 border border-blue-700/50 rounded-lg">
+                    <div class="flex items-start space-x-2">
+                        <i class="fas fa-info-circle text-blue-500 mt-0.5"></i>
+                        <div class="text-sm text-blue-200">
+                            <p><strong>部署说明：</strong></p>
+                            <ul class="list-disc list-inside mt-1 space-y-1 text-xs">
+                                <li>支持在 EdgeOne Pages 环境变量中配置 <code>DNS_API_KEY</code> 和 <code>ACCESS_PASSWORD</code></li>
+                                <li>如果环境变量未配置 API Key，则需要在页面输入</li>
+                                <li>如果配置了 <code>ACCESS_PASSWORD</code>，需要在右上角点击登录验证</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <section class="lg:col-span-1">
                 <div id="domainSection" class="card rounded-xl p-6 fade-in disabled-overlay">
@@ -691,7 +686,6 @@
             } else {
                 localStorage.removeItem('dns_api_key');
             }
-            closeApiConfigModal();
             showToast('配置已保存', 'success');
             if (isAuthenticated || !hasAccessPassword) {
                 loadDomains();
@@ -702,13 +696,16 @@
             document.getElementById('apiKey').value = localStorage.getItem('dns_api_key') || '';
         }
 
-        function showApiConfigModal() {
-            document.getElementById('apiConfigModal').classList.remove('hidden');
-            loadConfig();
-        }
-
-        function closeApiConfigModal() {
-            document.getElementById('apiConfigModal').classList.add('hidden');
+        function toggleConfig() {
+            const content = document.getElementById('configContent');
+            const icon = document.getElementById('configToggleIcon');
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                icon.classList.replace('fa-chevron-down', 'fa-chevron-up');
+            } else {
+                content.classList.add('hidden');
+                icon.classList.replace('fa-chevron-up', 'fa-chevron-down');
+            }
         }
 
         function toggleApiKeyVisibility() {
@@ -1026,7 +1023,6 @@
                 closeModal(); 
                 closeDeleteModal(); 
                 closeLoginModal(); 
-                closeApiConfigModal();
             }
         });
     </script>
