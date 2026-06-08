@@ -12,6 +12,7 @@ export default async function onRequest(context) {
         
         let validSession = false;
         
+        // 优先检查 KV
         if (sessionToken && env.dns_kv) {
             try {
                 const session = await env.dns_kv.get(`session:${sessionToken}`);
@@ -19,8 +20,17 @@ export default async function onRequest(context) {
             } catch (e) {}
         }
         
+        // 如果没有 KV 或 KV 检查失败，验证 token 格式（时间戳 + 随机数，24小时内有效）
         if (!validSession && sessionToken && sessionToken.startsWith('dns_')) {
-            validSession = true;
+            const parts = sessionToken.split('_');
+            if (parts.length >= 2) {
+                const timestamp = parseInt(parts[1]);
+                const now = Date.now();
+                // 验证时间戳是否在 24 小时内
+                if (!isNaN(timestamp) && (now - timestamp) < 86400000) {
+                    validSession = true;
+                }
+            }
         }
         
         if (!validSession) {
