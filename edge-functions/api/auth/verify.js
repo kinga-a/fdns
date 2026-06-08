@@ -23,12 +23,11 @@ export async function onRequestPost(context) {
             const random = Math.random().toString(36).substring(2, 15);
             const token = `dns_${timestamp}_${random}`;
             
-            if (env.dns_kv) {
-                try {
-                    await env.dns_kv.put(`session:${token}`, 'valid', { expirationTtl: 86400 });
-                } catch (e) {
-                    console.log('KV store failed:', e);
-                }
+            // 修复：直接使用 dns_kv，不需要 env. 前缀
+            try {
+                await dns_kv.put(`session:${token}`, 'valid', { expirationTtl: 86400 });
+            } catch (e) {
+                console.log('KV store failed:', e);
             }
             
             return new Response(JSON.stringify({ 
@@ -41,7 +40,6 @@ export async function onRequestPost(context) {
                     'Access-Control-Allow-Origin': '*',
                     'Access-Control-Allow-Methods': 'POST, OPTIONS',
                     'Access-Control-Allow-Headers': 'Content-Type',
-                    // 关键修复：移除 HttpOnly，前端才能读取
                     'Set-Cookie': `dns_session=${encodeURIComponent(token)}; Path=/; Max-Age=86400; SameSite=Lax`
                 }
             });
