@@ -9,17 +9,20 @@ export async function onRequestPost(context) {
         if (!accessPassword || accessPassword.trim() === '') {
             return new Response(JSON.stringify({ error: '未配置访问密码' }), {
                 status: 400,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+                    'Access-Control-Allow-Headers': 'Content-Type'
+                }
             });
         }
 
         if (password === accessPassword) {
-            // 生成会话令牌
             const timestamp = Date.now();
             const random = Math.random().toString(36).substring(2, 15);
             const token = `dns_${timestamp}_${random}`;
             
-            // 存储到KV
             if (env.dns_kv) {
                 try {
                     await env.dns_kv.put(`session:${token}`, 'valid', { expirationTtl: 86400 });
@@ -35,19 +38,44 @@ export async function onRequestPost(context) {
             }), {
                 headers: { 
                     'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+                    'Access-Control-Allow-Headers': 'Content-Type',
                     'Set-Cookie': `dns_session=${encodeURIComponent(token)}; Path=/; Max-Age=86400; SameSite=Lax; HttpOnly`
                 }
             });
         } else {
             return new Response(JSON.stringify({ error: '密码错误' }), {
                 status: 401,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+                    'Access-Control-Allow-Headers': 'Content-Type'
+                }
             });
         }
     } catch (e) {
         return new Response(JSON.stringify({ error: '请求格式错误' }), {
             status: 400,
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'POST, OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type'
+            }
         });
     }
+}
+
+export async function onRequestOptions(context) {
+    return new Response(null, {
+        status: 204,
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type',
+            'Access-Control-Max-Age': '86400'
+        }
+    });
 }
