@@ -33,8 +33,8 @@ export default async function onRequest(context) {
 
         let validSession = false;
 
-        // 使用环境变量中的 KV 绑定
-        const kv = env.dns_kv;
+        // EdgeOne Pages 中 KV 作为全局变量注入，直接通过变量名访问
+        const kv = typeof dns_kv !== 'undefined' ? dns_kv : null;
         if (sessionToken && kv) {
             try {
                 const session = await kv.get(`session:${sessionToken}`);
