@@ -83,8 +83,9 @@ export async function onRequestPost(context) {
         if (password === accessPassword) {
             const token = generateSecureToken();
 
-            // 使用 KV 存储 session（变量名通过环境绑定）
-            const kv = env.dns_kv;
+            // 使用 KV 存储 session（绑定时的 Variable Name 为 dns_kv）
+            // EdgeOne Pages 中 KV 作为全局变量注入，直接通过变量名访问
+            const kv = typeof dns_kv !== 'undefined' ? dns_kv : null;
             if (kv) {
                 try {
                     await kv.put(`session:${token}`, 'valid', { expirationTtl: 86400 });
